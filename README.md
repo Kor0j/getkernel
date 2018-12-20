@@ -12,6 +12,7 @@ Other options:
 getkernel [-ih]
 
 -i - Sets interactive mode, asks the user what kernel version, and for permission to install.
+
 -h - Prints how to use, and exits.
 
 
