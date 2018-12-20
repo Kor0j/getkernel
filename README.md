@@ -18,5 +18,5 @@ getkernel [-ih]
 -h - Prints how to use, and exits.
 
 
-TODO: Add more distributions, add more options (don't ask to install) 
+TODO: Add more distributions (Like yum and rpm), add more options.
 
