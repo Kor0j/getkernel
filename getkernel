@@ -1,0 +1,90 @@
+#!/bin/bash
+function usage {
+  printf "To use this in interactive mode, use -i.\n"
+  printf "To skip the intro and specify a kernel version,  add [Kernel Version] after the program name. \n"
+  printf "Otherwise, to see this help screen, use no params or -h. \n"
+  exit
+}
+
+re='^[0-9]+([.][0-9]+)*([-][A-Z]*[a-z]*)*$'
+installnow=
+interactive=
+PCKMGR=
+ARCH=
+KERNVER=
+
+while [ "$1" = "" ]; do
+    case $1 in
+        * )                     usage
+                                exit 1
+    esac
+    shift
+done
+while [ "$1" != "" ]; do
+    case $1 in
+        * )			KERNVER=$1
+                                ;;
+        -i | --interactive )    interactive=1
+                                ;;
+        -h | --help )           usage
+                                exit
+    esac
+    shift
+done
+if ! [[ $KERNVER =~ $re ]] ; then
+   echo "Sorry, that's not a valid kernel version number." >&2; exit 1
+fi
+if [ $(which dpkg) ]; then
+  SYS=deb
+	fi
+# uname -a | grep -e 'amd64' -e 'x86_64' -e 'i386' -e 'i686' >> $ARCH
+if [ "$interactive" = "1" ]; then
+  printf "What version of the kernel would you like me to download from the Ubuntu mainline?\n"
+  read KERNVER
+fi
+
+cd $HOME
+if [ ! -d "$HOME/Kernels" ]; then
+  mkdir $HOME/Kernels
+fi
+
+
+printf "Got it, downloading version $KERNVER of the kernel, and its associated headers.\n"
+cd $HOME/Kernels
+if [ ! -d "./$KERNVER" ]; then
+  mkdir ./$KERNVER
+fi
+wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v$KERNVER/
+if [[ $(cat index.html | grep 'Build for amd64') = *succeeded* ]]; then
+	rm index.html
+	wget -r -l1 -np -A 'linux-*_all.deb' -A 'linux-*generic*_amd64.deb' -R 'index.html' http://kernel.ubuntu.com/~kernel-ppa/mainline/v$KERNVER/ -e robots=off
+else
+	rm index.html
+	rm -rf ./$KERNVER/
+	exit
+fi
+mv ./kernel.ubuntu.com/~kernel-ppa/mainline/v$KERNVER/linux-*.deb ./$KERNVER
+rm -rf ./kernel.ubuntu.com/
+cd ./$KERNVER
+
+
+
+if [[ "$interactive" = "1" ]]; then
+	printf "Would you like me to install them now?(y/N)"
+	read installnow
+fi
+
+if [[ "$interactive" != "1" ]] ; then
+	installnow=y
+fi
+
+
+if [[ "$installnow" = "y" || "Y" ]]; then
+	printf "Okay, installing now. The system may ask for your user password.\n"
+	sudo dpkg -i linux-*.deb
+fi
+exit
+
+# TODO: Do a special count to find latest stable in user-specified series (Like 4.13 for example) and do big grab of page.
+# Grep for "Build for amd64 succeeded" and if success, then grab all from *_all and *_amd64 else, return NOPE (DONE! Need to do the same for other plats though.)
+# Make an RPM-specific case.
