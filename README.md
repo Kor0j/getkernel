@@ -13,6 +13,8 @@ getkernel [-ih]
 
 -i - Sets interactive mode, asks the user what kernel version, and for permission to install.
 
+-n - Do not automatically install, just download.
+
 -h - Prints how to use, and exits.
 
 
